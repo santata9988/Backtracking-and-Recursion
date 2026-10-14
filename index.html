@@ -1,0 +1,935 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Backtracking และ Recursion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky chapter nav, one reading column, wide tables/code scroll in their own box.
+   Palette: ink navy + signal blue (ch.7 Backtracking), teal (ch.8 Recursion). */
+:root {
+  --bg: #F4F6FA;
+  --surface: #FFFFFF;
+  --fg: #101B33;
+  --muted: #55617A;
+  --line: #D5DBE8;
+  --accent: #1D4ED8;
+  --accent-soft: #E3EBFF;
+  --accent2: #0F766E;
+  --accent2-soft: #D9F3EF;
+  --warn: #B45309;
+  --warn-soft: #FFF1DC;
+  --code-bg: #0F1A33;
+  --code-fg: #E1E8FA;
+  --code-dim: #8796B8;
+  --font-display: "Prompt", "IBM Plex Sans Thai", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B1226; --surface: #121C38; --fg: #E8EDFA; --muted: #98A4C0; --line: #263154;
+    --accent: #8CAEFF; --accent-soft: #1A2A5A; --accent2: #5FDCCB; --accent2-soft: #12363A;
+    --warn: #F4B35E; --warn-soft: #3A2A12; --code-bg: #070D1D; --code-fg: #DDE5FA; --code-dim: #7C8AAE;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0B1226; --surface: #121C38; --fg: #E8EDFA; --muted: #98A4C0; --line: #263154;
+  --accent: #8CAEFF; --accent-soft: #1A2A5A; --accent2: #5FDCCB; --accent2-soft: #12363A;
+  --warn: #F4B35E; --warn-soft: #3A2A12; --code-bg: #070D1D; --code-fg: #DDE5FA; --code-dim: #7C8AAE;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.75;
+  padding-inline: 16px; padding-block: 0 4rem;
+}
+.wrap { max-width: 880px; margin-inline: auto; }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.3; text-wrap: balance; margin: 0; }
+p { margin: 0 0 1em; }
+a { color: var(--accent); }
+code { font-family: var(--font-mono); font-size: 0.88em; background: var(--accent-soft); padding: 0.1em 0.4em; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* top nav */
+.nav {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10;
+  background: var(--bg); border-bottom: 1px solid var(--line);
+  margin-inline: -16px; padding: 10px 16px;
+}
+.nav .wrap { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.nav a {
+  font-family: var(--font-display); font-weight: 500; font-size: 0.85rem; text-decoration: none;
+  color: var(--fg); padding: 4px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+}
+.nav a:hover { border-color: var(--accent); color: var(--accent); }
+.nav .sp { flex: 1; }
+
+/* header */
+header.top { padding-block: 3rem 2rem; }
+.kicker { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
+header.top h1 { font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 700; letter-spacing: -0.01em; }
+header.top h1 span { color: var(--accent); }
+header.top h1 span.t { color: var(--accent2); }
+header.top p.lead { font-size: 1.1rem; color: var(--muted); max-width: 62ch; margin-top: 1rem; }
+.stats { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1.5rem; }
+.stats div { font-family: var(--font-mono); font-size: 0.8rem; border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 6px; }
+
+/* chapter + sections */
+.chapter { margin-top: 3.5rem; }
+.chapter-head { border-top: 3px solid var(--accent); padding-top: 1rem; margin-bottom: 1.5rem; }
+.chapter-head.c8 { border-top-color: var(--accent2); }
+.chapter-head .label { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.08em; color: var(--accent); }
+.c8 .label { color: var(--accent2); }
+.chapter-head h2 { font-size: clamp(1.6rem, 4.5vw, 2.2rem); margin-top: 0.25rem; }
+.chapter-head p { color: var(--muted); margin: 0.75rem 0 0; max-width: 66ch; }
+section.sec { margin-top: 2.75rem; }
+section.sec > h3 { font-size: 1.3rem; margin-bottom: 0.9rem; display: flex; gap: 0.6rem; align-items: baseline; flex-wrap: wrap; }
+section.sec > h3 .no { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 400; color: var(--muted); }
+h4 { font-size: 1.02rem; margin: 1.5rem 0 0.5rem; }
+
+ul, ol { padding-left: 1.3em; margin: 0 0 1em; }
+li { margin-bottom: 0.35em; }
+
+.steps { counter-reset: s; list-style: none; padding: 0; display: grid; gap: 8px; }
+.steps li { counter-increment: s; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px 10px 52px; position: relative; margin: 0; }
+.steps li::before { content: counter(s); position: absolute; left: 14px; top: 10px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--bg); font-family: var(--font-mono); font-size: 0.8rem; display: grid; place-items: center; line-height: 1; }
+.c8 .steps li::before { background: var(--accent2); }
+
+.callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 1.25rem 0; }
+.callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+.callout.t { border-left-color: var(--accent2); background: var(--accent2-soft); }
+.callout p:last-child { margin-bottom: 0; }
+
+/* tables */
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); margin: 1rem 0 1.5rem; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; min-width: 560px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-display); font-weight: 600; font-size: 0.85rem; background: var(--accent-soft); white-space: nowrap; }
+.c8 th { background: var(--accent2-soft); }
+tr:last-child td { border-bottom: 0; }
+td.n, th.n { white-space: nowrap; font-family: var(--font-mono); font-size: 0.85rem; }
+
+/* code */
+.codeblock { position: relative; margin: 1rem 0 1.5rem; }
+.codeblock .cap { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; }
+pre {
+  margin: 0; background: var(--code-bg); color: var(--code-fg);
+  font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.65;
+  padding: 14px 16px; border-radius: 8px; overflow-x: auto; tab-size: 4;
+}
+pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+.copy {
+  position: absolute; top: 24px; right: 8px; font-family: var(--font-mono); font-size: 0.72rem;
+  background: transparent; color: var(--code-dim); border: 1px solid var(--code-dim); border-radius: 4px; padding: 2px 8px; cursor: pointer;
+}
+.copy:hover { color: var(--code-fg); border-color: var(--code-fg); }
+.out { background: var(--surface); color: var(--fg); border: 1px dashed var(--line); }
+
+/* grids */
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 1rem 0 1.5rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.card h4 { margin-top: 0; }
+.card p:last-child, .card ul:last-child { margin-bottom: 0; }
+
+.maze { display: inline-grid; grid-template-columns: repeat(4, 44px); gap: 3px; margin: 0.5rem 1.5rem 0.5rem 0; }
+.maze span { height: 44px; display: grid; place-items: center; font-family: var(--font-mono); font-weight: 500; border-radius: 4px; background: var(--surface); border: 1px solid var(--line); }
+.maze span.w { background: var(--fg); color: var(--bg); opacity: 0.85; }
+.maze span.p { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.maze span.sg { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.mazes { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-start; }
+.mazes figure { margin: 0; }
+.mazes figcaption { font-size: 0.82rem; color: var(--muted); }
+
+/* demos */
+.demo { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 1.25rem 0 1.5rem; }
+.demo h4 { margin-top: 0; }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.row label { font-size: 0.9rem; }
+select, input[type=range], button.act { font-family: var(--font-body); font-size: 0.95rem; }
+select { background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+button.act { background: var(--accent); color: var(--bg); border: 0; border-radius: 6px; padding: 6px 14px; cursor: pointer; }
+.c8 button.act { background: var(--accent2); }
+.board { display: grid; gap: 0; border: 2px solid var(--fg); width: fit-content; max-width: 100%; }
+.board i { aspect-ratio: 1; display: grid; place-items: center; font-style: normal; font-weight: 700; color: var(--bg); }
+.board i.l { background: var(--surface); }
+.board i.d { background: var(--line); }
+.board i.q { background: var(--accent); color: var(--bg); }
+.readout { font-family: var(--font-mono); font-size: 0.85rem; color: var(--muted); display: grid; gap: 2px; margin-top: 10px; }
+.readout b { color: var(--fg); font-weight: 500; }
+.demo-grid { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+.demo-grid > * { min-width: 0; }
+.moves { font-family: var(--font-mono); font-size: 0.82rem; columns: 2 200px; margin: 0; padding: 0; list-style: none; }
+.moves li { margin: 0 0 2px; }
+
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; }
+summary { cursor: pointer; padding: 10px 14px; font-weight: 500; }
+details > div { padding: 0 14px 12px; }
+details > div p:last-child, details > div ul:last-child { margin-bottom: 0; }
+footer { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<nav class="nav" aria-label="สารบัญ">
+  <div class="wrap">
+    <a href="#ch7">บทที่ 7 Backtracking</a>
+    <a href="#nqueens">N-Queens</a>
+    <a href="#maze">เขาวงกต</a>
+    <a href="#ch8">บทที่ 8 Recursion</a>
+    <a href="#fib">Fibonacci</a>
+    <a href="#hanoi">Tower of Hanoi</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<header class="top">
+  <div class="kicker">Analysis of Algorithm · บทที่ 7–8</div>
+  <h1><span>Backtracking</span> และ <span class="t">Recursion</span></h1>
+  <p class="lead">สรุปแนวคิด ตารางเปรียบเทียบ การวิเคราะห์ความซับซ้อน และโค้ด Python ทั้งหมดจากสองบท พร้อมตัวอย่าง N-Queens และ Tower of Hanoi ที่กดลองได้</p>
+  <div class="stats">
+    <div>N-Queens · O(n·n!)</div>
+    <div>Fibonacci · O(2ⁿ)</div>
+    <div>Hanoi · 2ⁿ − 1 ครั้ง</div>
+  </div>
+</header>
+
+<!-- ============================ CHAPTER 7 ============================ -->
+<div class="chapter" id="ch7">
+  <div class="chapter-head">
+    <div class="label">บทที่ 7</div>
+    <h2>วิธีย้อนกลับ (Backtracking)</h2>
+    <p>เทคนิคออกแบบอัลกอริทึมสำหรับปัญหาค้นหาคำตอบจากความเป็นไปได้จำนวนมาก สร้างคำตอบทีละขั้น ตรวจทุกขั้น และย้อนกลับเมื่อเจอทางตัน</p>
+  </div>
+
+  <section class="sec">
+    <h3><span class="no">7.1</span>หลักการทำงาน</h3>
+    <ol class="steps">
+      <li>เริ่มจากสถานะว่าง (empty state)</li>
+      <li>เลือกหนึ่งทางเลือก แล้วเพิ่มเข้าไปในคำตอบบางส่วน (partial solution)</li>
+      <li>ตรวจเงื่อนไข: ถ้าสอดคล้องให้เดินหน้าต่อ ถ้าไม่สอดคล้องให้ย้อนกลับแล้วเลือกทางอื่น</li>
+      <li>ทำซ้ำจนได้คำตอบทั้งหมดหรือคำตอบที่ดีที่สุด</li>
+    </ol>
+  </section>
+
+  <section class="sec">
+    <h3><span class="no">7.2</span>คุณสมบัติสำคัญ</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>คุณสมบัติ</th><th>คำอธิบาย</th><th>ตัวอย่าง</th></tr></thead>
+      <tbody>
+        <tr><td>สร้างคำตอบทีละขั้น</td><td>เริ่มจากว่างแล้วเพิ่มองค์ประกอบทีละส่วน และตรวจว่ายังไปถึงคำตอบสมบูรณ์ได้หรือไม่</td><td>วาง Queen บนกระดานทีละตัว</td></tr>
+        <tr><td>ย้อนกลับ (Backtrack)</td><td>ถ้าเส้นทางไม่ถูกต้องให้ undo แล้วลองทางอื่น เป็นการลองผิดลองถูกอย่างมีระบบ</td><td>เจอทางตันในเขาวงกต</td></tr>
+        <tr><td>ตัดกิ่ง (Pruning)</td><td>ใช้เงื่อนไขตัดทางเลือกที่เป็นไปไม่ได้ทิ้งทันที ลดจำนวนการค้นหา</td><td>Sudoku: เลขซ้ำในแถวหรือคอลัมน์</td></tr>
+        <tr><td>ทำงานแบบ Recursive</td><td>แต่ละการเรียกทำหน้าที่ เลือก → ตรวจ → เดินหน้า → ย้อนกลับ</td><td>ฟังก์ชันแก้ N-Queens</td></tr>
+        <tr><td>ความสมบูรณ์ (Completeness)</td><td>ถ้าไม่ตัดกิ่งจะได้คำตอบทุกแบบ และถ้าตัดกิ่งถูกต้องคำตอบที่เหลือก็ยังถูกต้อง</td><td>N-Queens หาได้ครบทุกแบบ</td></tr>
+        <tr><td>ความซับซ้อนเชิงเวลา</td><td>ทั่วไปเป็น exponential เช่น O(2ⁿ), O(n!) แต่ pruning ทำให้เร็วกว่าที่วิเคราะห์ในทางทฤษฎี</td><td>Sudoku</td></tr>
+        <tr><td>ความเหมาะสมของปัญหา</td><td>ปัญหา combinatorial และ search ที่ใช้ Greedy หรือ DP ได้ยาก</td><td>Graph Coloring, Knight's Tour</td></tr>
+        <tr><td>ความยืดหยุ่น</td><td>หาคำตอบเดียว คำตอบทั้งหมด หรือคำตอบที่ดีที่สุดก็ได้</td><td>Sudoku</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- N-Queens -->
+  <section class="sec" id="nqueens">
+    <h3><span class="no">7.3</span>ปัญหา N-Queens</h3>
+    <p>วาง Queen จำนวน N ตัวบนกระดาน N×N โดยไม่ให้ตัวใดโจมตีตัวอื่นได้ Queen โจมตีได้ 3 ทิศทาง คือแนวนอน แนวตั้ง และแนวทแยงทั้งสองทิศ จึงห้ามมี Queen สองตัวอยู่แถวเดียวกัน คอลัมน์เดียวกัน หรือแนวทแยงเดียวกัน</p>
+    <div class="cols">
+      <div class="card"><h4>กรณีเล็ก</h4>
+        <ul><li>N = 1 วางได้ 1 วิธี</li><li>N = 2 หรือ 3 ไม่มีคำตอบ</li><li>N = 4 วางได้ 2 วิธี</li></ul>
+      </div>
+      <div class="card"><h4>แนวคิดการแก้</h4>
+        <ul><li>วางทีละแถว เริ่มจากแถวแรก</li><li>ตรวจว่าไม่ขัดกับ Queen ที่วางไปแล้ว</li><li>ถ้าแถวไหนวางไม่ได้เลย ย้อนกลับไปแถวก่อนหน้าแล้วลองคอลัมน์อื่น</li><li>ทำซ้ำจนครบ N ตัว</li></ul>
+      </div>
+    </div>
+
+    <div class="demo" id="qdemo">
+      <h4>ลองรัน N-Queens</h4>
+      <div class="row">
+        <label for="qn">ขนาดกระดาน N</label>
+        <select id="qn"><option>4</option><option>5</option><option>6</option><option>7</option><option selected>8</option><option>9</option><option>10</option></select>
+        <button class="act" id="qrun" type="button">หาคำตอบ</button>
+      </div>
+      <div class="demo-grid">
+        <div id="qboard" class="board" aria-label="กระดานแสดงคำตอบแรก"></div>
+        <div class="readout" id="qread"></div>
+      </div>
+    </div>
+
+    <div class="codeblock"><div class="cap">โปรแกรม 7.1 · N-Queens (Python)</div>
+<pre><code># Function to check if it is safe to place
+# the queen at board[row][col]
+def isSafe(mat, row, col):
+    n = len(mat)
+
+    # Check this col on upper side
+    for i in range(row):
+        if mat[i][col]:
+            return False
+
+    # Check upper diagonal on left side
+    for i, j in zip(range(row - 1, -1, -1),
+                    range(col - 1, -1, -1)):
+        if mat[i][j]:
+            return False
+
+    # Check upper diagonal on right side
+    for i, j in zip(range(row - 1, -1, -1),
+                    range(col + 1, n)):
+        if mat[i][j]:
+            return False
+
+    return True
+
+def placeQueens(row, mat):
+    n = len(mat)
+
+    # If all queens are placed then return true
+    if row == n:
+        return True
+
+    # Try placing queen in all columns one by one
+    for i in range(n):
+        if isSafe(mat, row, i):
+            mat[row][i] = 1
+            if placeQueens(row + 1, mat):
+                return True
+            mat[row][i] = 0      # backtrack
+
+    return False
+
+# Function to find the solution to the N-Queens problem
+def nQueen(n):
+    mat = [[0 for _ in range(n)] for _ in range(n)]
+
+    if placeQueens(0, mat):
+        ans = []                  # columns of the queens
+        for i in range(n):
+            for j in range(n):
+                if mat[i][j]:
+                    ans.append(j + 1)
+        return ans
+    else:
+        return [-1]
+
+if __name__ == "__main__":
+    n = 4
+    ans = nQueen(n)
+    print(" ".join(map(str, ans)))</code></pre></div>
+    <div class="codeblock"><div class="cap">ผลลัพธ์ (ตรวจโดยรันจริง)</div>
+<pre class="out"><code>n = 4  →  2 4 1 3
+n = 2  →  -1          (ไม่มีคำตอบ)
+n = 8  →  1 5 8 6 3 7 2 4</code></pre></div>
+
+    <h4>อธิบายแต่ละฟังก์ชัน</h4>
+    <div class="tbl"><table>
+      <thead><tr><th>ฟังก์ชัน</th><th>หน้าที่</th><th>กระบวนการ</th></tr></thead>
+      <tbody>
+        <tr><td class="n">isSafe(mat, row, col)</td><td>ตรวจว่าวาง Queen ที่ (row, col) ปลอดภัยหรือไม่</td><td>ตรวจคอลัมน์เดียวกันด้านบน แนวทแยงซ้ายบน และแนวทแยงขวาบน ถ้าเสี่ยงโดนโจมตีคืน False ถ้าปลอดภัยคืน True</td></tr>
+        <tr><td class="n">placeQueens(row, mat)</td><td>วาง Queen ทีละแถวด้วย Backtracking</td><td>ถ้า row == n คืน True (พบคำตอบ) จากนั้นลองทุกคอลัมน์ ถ้า isSafe ให้วางแล้วเรียก placeQueens(row+1) ถ้าตันให้เอา Queen ออก (<code>mat[row][i] = 0</code>) ถ้าไม่มีคอลัมน์ใดวางได้คืน False</td></tr>
+        <tr><td class="n">nQueen(n)</td><td>เตรียมบอร์ดและเรียก placeQueens</td><td>สร้างบอร์ด n×n ค่า 0 ทุกช่อง เรียก placeQueens(0, mat) ถ้ามีคำตอบคืนลิสต์คอลัมน์ (เลขคอลัมน์ + 1) ของแต่ละแถว ถ้าไม่มีคืน [-1]</td></tr>
+        <tr><td class="n">__main__</td><td>จุดเริ่มต้นโปรแกรม</td><td>กำหนด n = 4 เรียก nQueen(n) และพิมพ์ตำแหน่งคอลัมน์ของ Queen แต่ละแถว</td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>การวิเคราะห์ความซับซ้อน</h4>
+    <div class="cols">
+      <div class="card"><h4>เวลา: O(n·n!)</h4>
+        <p>แต่ละแถวลองได้สูงสุด n คอลัมน์ ขอบเขตหยาบคือ nⁿ แต่เพราะห้ามซ้ำคอลัมน์ จึงเหลือเท่ากับ permutation ของคอลัมน์ คือ n! แต่ละการวางเรียก isSafe ที่ใช้ O(n) รวมเป็น O(n·n!)</p></div>
+      <div class="card"><h4>พื้นที่: O(n²)</h4>
+        <p>บอร์ด n×n ใช้ O(n²) และ stack ของ recursion ลึกสุด n ใช้ O(n) รวมเป็น O(n²)</p></div>
+    </div>
+  </section>
+
+  <!-- Maze -->
+  <section class="sec" id="maze">
+    <h3><span class="no">7.4</span>ปัญหาเดินเขาวงกต</h3>
+    <p>หาทางจากจุดเริ่มต้น (S) ไปจุดสิ้นสุด (G) โดยเดินได้เฉพาะช่องที่เปิด (ค่า 1) และหลีกเลี่ยงกำแพง (ค่า 0) อัลกอริทึมเดินหน้าทีละก้าวในทุกทิศ ถ้าเจอทางตันก็ย้อนกลับมายังตำแหน่งก่อนหน้าเพื่อลองเส้นทางใหม่ จนพบทางออกหรือยืนยันว่าไม่มี</p>
+    <ol class="steps">
+      <li>เริ่มที่จุดเริ่มต้น เช่น (0,0)</li>
+      <li>ตรวจเงื่อนไข: ถึงจุดหมายแล้วให้แสดงทางออกและจบ ถ้าออกนอกเขตหรือชนกำแพงให้ย้อนกลับ</li>
+      <li>ทำเครื่องหมายตำแหน่งที่มาแล้ว เพื่อไม่ให้วนซ้ำ</li>
+      <li>ลองเคลื่อนที่ทุกทิศ (ขวา ลง ซ้าย ขึ้น)</li>
+      <li>ถ้าทางใดไปถึงจุดหมายได้ ส่งผลลัพธ์กลับ</li>
+      <li>ถ้าไม่มีทิศใดไปต่อได้ ย้อนกลับหนึ่งขั้นแล้วลองเส้นทางใหม่</li>
+    </ol>
+
+    <div class="mazes">
+      <figure>
+        <div class="maze" aria-label="เขาวงกต 4x4">
+          <span class="sg">S</span><span>1</span><span class="w">0</span><span class="w">0</span>
+          <span>1</span><span>1</span><span>1</span><span class="w">0</span>
+          <span class="w">0</span><span>1</span><span class="w">0</span><span class="w">0</span>
+          <span>1</span><span>1</span><span>1</span><span class="sg">G</span>
+        </div>
+        <figcaption>เขาวงกตตัวอย่าง 4×4 (1 = ทางเดิน, 0 = กำแพง)</figcaption>
+      </figure>
+      <figure>
+        <div class="maze" aria-label="เส้นทางที่พบ">
+          <span class="sg">S</span><span class="p">*</span><span class="w">0</span><span class="w">0</span>
+          <span class="w">0</span><span class="p">*</span><span>1</span><span class="w">0</span>
+          <span class="w">0</span><span class="p">*</span><span class="w">0</span><span class="w">0</span>
+          <span>1</span><span class="p">*</span><span class="p">*</span><span class="sg">G</span>
+        </div>
+        <figcaption>เส้นทางที่โปรแกรมพบ (7 ช่อง)</figcaption>
+      </figure>
+    </div>
+
+    <h4>Pseudo-code</h4>
+    <div class="codeblock">
+<pre><code>Algorithm SolveMaze(maze, x, y, solution):
+    if (x, y) คือ จุดหมาย (Goal):
+        แสดงเส้นทางใน solution
+        return True
+
+    if (x, y) เป็นตำแหน่งที่เดินได้และยังไม่เคยไป:
+        ทำเครื่องหมาย solution[x][y] = 1
+
+        if SolveMaze(maze, x + 1, y, solution): return True   # ขวา
+        if SolveMaze(maze, x, y + 1, solution): return True   # ลง
+        if SolveMaze(maze, x - 1, y, solution): return True   # ซ้าย
+        if SolveMaze(maze, x, y - 1, solution): return True   # ขึ้น
+
+        # หากไม่มีทางไป — ย้อนกลับ
+        solution[x][y] = 0
+        return False
+
+    return False</code></pre></div>
+
+    <h4>โค้ด Python</h4>
+    <div class="codeblock"><div class="cap">Maze Solver using Backtracking</div>
+<pre><code>from typing import List, Tuple, Optional
+
+# พิกัด (แถว, คอลัมน์)
+Coord = Tuple[int, int]
+
+# ค้นหาตำแหน่งเริ่มต้น (S) และเป้าหมาย (G)
+def find_start_goal(maze: List[List[str]]) -&gt; Tuple[Coord, Coord]:
+    start = goal = None
+    for r, row in enumerate(maze):
+        for c, val in enumerate(row):
+            if val == 'S':
+                start = (r, c)
+            elif val == 'G':
+                goal = (r, c)
+    if start is None or goal is None:
+        raise ValueError("Maze must contain 'S' (start) and 'G' (goal).")
+    return start, goal
+
+# ตรวจว่าพิกัดอยู่ในขอบเขตหรือไม่
+def in_bounds(maze: List[List[str]], r: int, c: int) -&gt; bool:
+    return 0 &lt;= r &lt; len(maze) and 0 &lt;= c &lt; len(maze[0])
+
+# ตรวจว่าเดินได้หรือไม่ (1, S, G)
+def is_open(maze: List[List[str]], r: int, c: int) -&gt; bool:
+    return maze[r][c] in ('1', 'S', 'G')
+
+# ฟังก์ชันหลัก: Backtracking หาเส้นทาง S → G
+def solve_maze_backtracking(maze: List[List[str]]) -&gt; Optional[List[Coord]]:
+    start, goal = find_start_goal(maze)
+    visited = [[False]*len(maze[0]) for _ in range(len(maze))]
+    path: List[Coord] = []
+
+    # ทิศทาง: ขวา, ลง, ซ้าย, ขึ้น
+    dirs = [(0,1), (1,0), (0,-1), (-1,0)]
+
+    def dfs(r: int, c: int) -&gt; bool:
+        # นอกขอบเขต / เดินไม่ได้ / เคยมาแล้ว → กลับ
+        if not in_bounds(maze, r, c) or not is_open(maze, r, c) or visited[r][c]:
+            return False
+
+        path.append((r, c))
+        visited[r][c] = True
+
+        if (r, c) == goal:        # ถึงเป้าหมาย
+            return True
+
+        for dr, dc in dirs:
+            nr, nc = r + dr, c + dc
+            if dfs(nr, nc):
+                return True
+
+        path.pop()                # ไม่มีทางไปต่อ → Backtrack
+        return False
+
+    found = dfs(*start)
+    return path if found else None
+
+# แสดงผลโดยใส่ "*" ลงในเส้นทางที่พบ
+def render_solution(maze: List[List[str]], path: Optional[List[Coord]]) -&gt; List[str]:
+    view = [row[:] for row in maze]
+    if path:
+        for (r, c) in path:
+            if view[r][c] not in ('S', 'G'):
+                view[r][c] = '*'
+    return [' '.join(row) for row in view]
+
+def print_grid(grid_lines: List[str]) -&gt; None:
+    for line in grid_lines:
+        print(line)
+
+# เขาวงกตตัวอย่าง 4x4
+def example_maze() -&gt; List[List[str]]:
+    return [
+        ['S','1','0','0'],
+        ['1','1','1','0'],
+        ['0','1','0','0'],
+        ['1','1','1','G'],
+    ]
+
+if __name__ == "__main__":
+    maze = example_maze()
+    path = solve_maze_backtracking(maze)
+
+    print("Input Maze:")
+    print_grid([' '.join(row) for row in maze])
+
+    print("\nSolving...\n")
+    if path is None:
+        print("No path found.")
+    else:
+        print(f"Path found with {len(path)} steps:")
+        print(path)
+        print("\nSolution view ('*' marks the path):")
+        print_grid(render_solution(maze, path))</code></pre></div>
+    <div class="codeblock"><div class="cap">ผลลัพธ์เมื่อรันจริง</div>
+<pre class="out"><code>Path found with 7 steps:
+[(0, 0), (0, 1), (1, 1), (2, 1), (3, 1), (3, 2), (3, 3)]
+
+Solution view ('*' marks the path):
+S * 0 0
+0 * 1 0
+0 * 0 0
+1 * * G</code></pre></div>
+    <div class="callout warn">
+      <p><b>ข้อสังเกตเมื่อเทียบกับตำราเล่มนี้:</b> ผลลัพธ์ที่พิมพ์ในหนังสือแสดงพิกัด (1, 2) อยู่ในเส้นทางด้วย และแสดงแถวที่สองเป็น <code>0 * * 0</code> แต่ช่อง (1, 2) เป็นทางตัน โค้ดจะ <code>path.pop()</code> ออกตอน backtrack เมื่อรันจริงเส้นทางมี 7 ช่อง ไม่มี (1, 2) ตามที่แสดงข้างต้น</p>
+    </div>
+
+    <h4>การวิเคราะห์ประสิทธิภาพ (ตามตำรา)</h4>
+    <ul>
+      <li><b>Best case:</b> พบทางออกตั้งแต่เส้นทางแรก</li>
+      <li><b>Worst case:</b> ต้องสำรวจทุกเส้นทาง (ตำราระบุว่าเป็นแบบ exponential เมื่อมี 4 ทิศในทุกช่อง)</li>
+      <li>Backtracking เป็น exponential algorithm แต่เหมาะกับการค้นหาคำตอบแบบสมบูรณ์ในปัญหาที่มีพื้นที่จำกัด เช่น เขาวงกต, Sudoku, N-Queens</li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <h3><span class="no">7.5</span>งานวิจัยที่เกี่ยวข้องกับ N-Queens</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>งานวิจัย</th><th>แนวทาง</th></tr></thead>
+      <tbody>
+        <tr><td>Moghimi และ Amini (2024)</td><td>Non-Sequential Conflict Resolution (NSCR) จัดการความขัดแย้งของ Queen แบบไดนามิก ลดเวลาและหน่วยความจำ</td></tr>
+        <tr><td>Pantekis และคณะ (2024)</td><td>ประมวลผลแบบขนานบน GPGPU เพื่อเร่งการหาคำตอบของ N-Queens ขนาดใหญ่</td></tr>
+        <tr><td>Santhosh และคณะ (2023)</td><td>Quantum Backtracking และ Direct Column Algorithm บนคอมพิวเตอร์ควอนตัม เพื่อลดขอบเขตการค้นหา</td></tr>
+        <tr><td>Leal (2025)</td><td>Tabu Search สลับตำแหน่ง Queen เพื่อลดความขัดแย้ง</td></tr>
+        <tr><td>Hussein และ Zahid (2024)</td><td>Improved Naked Mole-Rat Algorithm ร่วมกับ Variable Neighborhood Search ได้ผลดีกว่า GA และ PSO</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="sec">
+    <h3><span class="no">7.6</span>Backtracking เทียบกับ Brute Force</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>ประเด็น</th><th>Brute Force</th><th>Backtracking</th></tr></thead>
+      <tbody>
+        <tr><td>แนวคิดหลัก</td><td>ลองทุกความเป็นไปได้แบบตรง ๆ</td><td>ลองทีละขั้น ถ้าไม่เป็นไปตามเงื่อนไขให้ย้อนกลับ</td></tr>
+        <tr><td>การตัดกิ่ง</td><td>ไม่มี ต้องตรวจทุกทางเลือก</td><td>มี เพื่อลดจำนวนการค้นหา</td></tr>
+        <tr><td>จำนวนการค้นหา</td><td>ทุกความเป็นไปได้ สูงมาก</td><td>เฉพาะเส้นทางที่ยังเป็นไปได้ น้อยลง</td></tr>
+        <tr><td>ประสิทธิภาพ</td><td>ช้ามากในปัญหา combinatorial ขนาดใหญ่</td><td>เร็วกว่ามากถ้า pruning ดี แม้ยังเป็น exponential</td></tr>
+        <tr><td>การประยุกต์</td><td>ใช้เป็น baseline หรือวิธีง่ายที่สุด</td><td>ปัญหา combinatorial ซับซ้อน เช่น N-Queens, Sudoku</td></tr>
+        <tr><td>ความสมบูรณ์</td><td>ได้คำตอบครบทุกแบบแน่นอน</td><td>ได้ครบเช่นกัน แต่มีประสิทธิภาพมากกว่า</td></tr>
+        <tr><td>ตัวอย่าง</td><td>หา subset ทั้งหมดของเซต</td><td>Sudoku: เลือกตัวเลขทีละช่อง ย้อนกลับถ้าไม่ถูกต้อง</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="sec">
+    <h3><span class="no">7.7</span>ปัญหาที่แก้ด้วย Backtracking</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>ปัญหา</th><th>คำอธิบาย</th><th>แนวทาง</th></tr></thead>
+      <tbody>
+        <tr><td>N-Queens</td><td>วาง N Queen บนกระดาน N×N โดยห้ามโจมตีกัน</td><td>วางทีละแถว ตรวจคอลัมน์และแนวทแยง ถ้าไม่ปลอดภัยให้ backtrack</td></tr>
+        <tr><td>Sudoku Solver</td><td>เติมเลข 1–9 ในตาราง 9×9 ไม่ซ้ำแถว คอลัมน์ และบล็อกย่อย</td><td>เติมทีละช่อง ตรวจเงื่อนไข ถ้าไม่ได้ให้ย้อนไปแก้ช่องก่อนหน้า</td></tr>
+        <tr><td>Graph Coloring</td><td>ระบายสีโหนดโดยห้ามโหนดติดกันสีเดียวกัน</td><td>กำหนดสีทีละโหนด ถ้าสีชนให้ย้อนกลับและลองสีอื่น</td></tr>
+        <tr><td>Hamiltonian Cycle</td><td>หาเส้นทางปิดที่ผ่านทุกโหนดเพียงครั้งเดียว</td><td>เลือกโหนดต่อไปทีละขั้น ตรวจว่าเส้นทางยัง valid</td></tr>
+        <tr><td>Knight's Tour</td><td>เดินม้าบนกระดานให้ครบทุกช่องโดยไม่ซ้ำ</td><td>ลองย้ายทีละตำแหน่ง ตรวจว่าเดินได้หรือไม่</td></tr>
+        <tr><td>Maze Solving</td><td>หาทางออกจากเขาวงกต</td><td>เดินทีละก้าว เจอทางตันให้ย้อนกลับแล้วเลือกเส้นใหม่</td></tr>
+        <tr><td>Subset Sum</td><td>หา subset ที่ผลรวมเท่าค่าที่กำหนดหรือไม่</td><td>เลือกหรือไม่เลือกสมาชิกทีละตัว ถ้าผลรวมเกินเป้าให้ backtrack</td></tr>
+        <tr><td>Word Search</td><td>ค้นหาคำในตารางตัวอักษรโดยอักษรต้องอยู่ติดกัน</td><td>เริ่มจากตัวแรก ขยายไปทุกทิศ ถ้าไม่ตรงคำให้ย้อนกลับ</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="sec">
+    <h3><span class="no">7.8</span>งานวิจัยที่ประยุกต์ใช้ Backtracking</h3>
+    <div class="tbl"><table>
+      <thead><tr><th class="n">ปี</th><th>งานวิจัย</th><th>โดเมน</th><th>ไอเดีย</th><th>สาระสำคัญ</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1962</td><td>Davis, Logemann &amp; Loveland — DPLL</td><td>SAT/Logic</td><td>Backtracking บน CNF ร่วมกับ unit propagation และ splitting</td><td>รากฐานของตัวแก้ SAT แบบ complete ที่มีอิทธิพลต่อ SAT/SMT รุ่นใหม่</td></tr>
+        <tr><td class="n">1977</td><td>Mackworth — Arc Consistency (AC-3)</td><td>CSP</td><td>ผสาน arc-consistency กับ backtracking</td><td>กรองโดเมนก่อนและระหว่างค้นหา ลดการลองผิด</td></tr>
+        <tr><td class="n">1979</td><td>Brélaz — DSATUR</td><td>Graph Coloring</td><td>เรียงตาม degree of saturation เพื่อแยกกิ่ง</td><td>เป็นฐานของ exact / branch-and-bound สำหรับ coloring</td></tr>
+        <tr><td class="n">1980</td><td>Haralick &amp; Elliott — Forward Checking</td><td>CSP</td><td>เพิ่ม forward checking ตัดค่าที่ขัดแย้งล่วงหน้า</td><td>ลดจำนวนโหนดค้นหาเมื่อเทียบกับ backtracking เพียว ๆ</td></tr>
+        <tr><td class="n">2000</td><td>Knuth — Algorithm X &amp; Dancing Links</td><td>Exact Cover (Sudoku, Pentomino)</td><td>เลือกคอลัมน์ + Dancing Links ทำให้ undo/redo เร็ว</td><td>ทำ exact cover ได้มีประสิทธิภาพและประยุกต์กว้าง</td></tr>
+        <tr><td class="n">2003</td><td>Yato &amp; Seta — Sudoku Complexity</td><td>Sudoku</td><td>Sudoku เป็น NP-complete ตัวแก้จริงมักใช้ backtracking + heuristics</td><td>อธิบายความยากของ Sudoku และสนับสนุนแนวทางแบ็คแทร็ก</td></tr>
+        <tr><td class="n">2004</td><td>Irgens — DPLL Selection Strategies</td><td>SAT/Heuristics</td><td>ศึกษา heuristic การเลือกตัวแปรและกิ่งใน DPLL</td><td>ชี้ผลของกลยุทธ์เลือกกิ่งต่อเวลาแก้ SAT</td></tr>
+        <tr><td class="n">2015</td><td>Furini et al. — Improved DSATUR B&amp;B</td><td>Graph Coloring</td><td>กรอบ B&amp;B บน DSATUR เพิ่มประสิทธิภาพการตัดกิ่ง</td><td>ผลทดลองดีบน benchmark coloring สมัยใหม่</td></tr>
+        <tr><td class="n">2021</td><td>Sleegers &amp; van den Berg — Hamiltonian Cycle</td><td>Graph</td><td>เปรียบเทียบ backtracking หลายตัว + เทคนิค prune</td><td>ยืนยันพื้นที่อินสแตนซ์ที่ยาก และเงื่อนไขที่ pruning ช่วยได้มาก</td></tr>
+        <tr><td class="n">2024</td><td>Pantekis et al. — Massively-Parallel N-Queens</td><td>Combinatorial Search</td><td>แบ็คแทร็กเชิงขนาน (GPGPU) + bit masks</td><td>เร่งการนับคำตอบ N-Queens ขนาดใหญ่</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="sec">
+    <h3><span class="no">7.9</span>สรุปบทที่ 7</h3>
+    <div class="callout">
+      <p>Backtracking สร้างคำตอบทีละขั้นและย้อนกลับเมื่อพบทางตัน ช่วยลดจำนวนความเป็นไปได้ที่ต้องตรวจเมื่อเทียบกับ Brute Force ใช้ได้กับ N-Queens, Sudoku, Graph Coloring, Maze Solving, Subset Sum และ Knight's Tour แม้เชิงทฤษฎีเป็น exponential แต่ pruning และการตรวจเงื่อนไขที่เหมาะสมทำให้ใช้งานจริงได้มีประสิทธิภาพ</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h3><span class="no">7.10</span>แบบฝึกหัดและเฉลย</h3>
+    <details><summary>1. แนวคิดหลักของ Backtracking เทียบกับ Brute Force</summary><div>
+      <ul><li><b>Backtracking:</b> สร้างคำตอบทีละขั้น ถ้าคำตอบบางส่วนไปต่อไม่ได้ก็ย้อนกลับและลองทางใหม่ เป็นการลองผิดลองถูกแบบมีระบบ</li>
+      <li><b>Brute Force:</b> ตรวจทุกความเป็นไปได้ (exhaustive search) โดยไม่ตัดกิ่ง</li>
+      <li>Brute Force ครอบคลุมทุกกรณีแต่ช้า ส่วน Backtracking เร็วกว่าด้วย pruning และยังได้คำตอบถูกต้องครบถ้วน</li></ul></div></details>
+    <details><summary>2. Pruning สำคัญอย่างไรใน Backtracking</summary><div>
+      <p>Pruning คือการหยุดสำรวจเส้นทางที่ไม่มีทางถึงคำตอบตั้งแต่เนิ่น ๆ ช่วยลดจำนวนเส้นทางที่ต้องค้นหา ไม่เสียเวลากับเส้นทางที่เป็นไปไม่ได้ และทำให้แก้ปัญหาซับซ้อนอย่าง Sudoku หรือ N-Queens ได้</p></div></details>
+    <details><summary>3. ตัวอย่างปัญหาที่แก้ด้วย Backtracking อย่างน้อย 3 ปัญหา</summary><div>
+      <ul><li><b>N-Queens:</b> วางทีละแถว ตรวจว่าไม่ขัดกับ Queen ก่อนหน้า ถ้าไม่ได้ให้ backtrack</li>
+      <li><b>Sudoku Solver:</b> เติมเลขทีละช่อง ตรวจว่าไม่ซ้ำแถว คอลัมน์ และบล็อก ถ้าซ้ำให้ย้อนกลับ</li>
+      <li><b>Maze Solving:</b> เดินทีละก้าว ถ้าเจอทางตันให้ย้อนไปจุดก่อนหน้าแล้วเลือกทางใหม่</li></ul></div></details>
+    <details><summary>4. ความซับซ้อนเชิงเวลาของ N-Queens</summary><div>
+      <ul><li>การวางมีความเป็นไปได้สูงสุด n! วิธี (แต่ละแถววาง 1 คอลัมน์ที่ไม่ซ้ำกัน)</li>
+      <li>ทุกครั้งที่วางเรียก isSafe ใช้ O(n)</li>
+      <li>เวลารวม <b>O(n·n!)</b> และพื้นที่ <b>O(n²)</b></li></ul></div></details>
+    <details><summary>5. ข้อดีและข้อจำกัดเมื่อเทียบกับ Dynamic Programming</summary><div>
+      <p><b>ข้อดี:</b> เข้าใจง่ายและยืดหยุ่น ใช้ได้กับหลายปัญหา combinatorial, หาคำตอบทั้งหมดได้ (ไม่ใช่แค่ค่าที่ดีที่สุด), ใช้ pruning ลดการค้นหา</p>
+      <p><b>ข้อจำกัด:</b> เวลาโดยทั่วไปยังเป็น exponential และไม่เหมาะกับปัญหาที่มีการคำนวณซ้ำมาก (overlapping subproblems)</p>
+      <p><b>เทียบกับ DP:</b> DP เหมาะกับปัญหาที่มี overlapping subproblems และ optimal substructure เช่น Fibonacci, Knapsack ส่วน Backtracking เหมาะกับ constraint satisfaction เช่น N-Queens, Sudoku</p></div></details>
+    <details><summary>6. ออกแบบ Backtracking สำหรับ Sudoku 4×4 (โจทย์ ไม่มีเฉลยในหนังสือ)</summary><div>
+      <p>หนังสือไม่ได้เฉลยข้อนี้ ตัวอย่างโค้ดด้านล่างเป็นแนวทางที่เขียนเพิ่มตามหลักการเดียวกับ N-Queens</p>
+      <div class="codeblock" style="margin-bottom:0">
+<pre><code>def is_valid(g, r, c, v):
+    for i in range(4):
+        if g[r][i] == v or g[i][c] == v:      # แถว / คอลัมน์
+            return False
+    br, bc = (r // 2) * 2, (c // 2) * 2       # บล็อก 2x2
+    for i in range(br, br + 2):
+        for j in range(bc, bc + 2):
+            if g[i][j] == v:
+                return False
+    return True
+
+def solve(g):
+    for r in range(4):
+        for c in range(4):
+            if g[r][c] == 0:                  # ช่องว่าง
+                for v in range(1, 5):
+                    if is_valid(g, r, c, v):
+                        g[r][c] = v
+                        if solve(g):
+                            return True
+                        g[r][c] = 0           # backtrack
+                return False                  # ไม่มีเลขใดวางได้
+    return True                               # เติมครบแล้ว</code></pre></div></div></details>
+    <h4>อ้างอิงของบท</h4>
+    <ul style="font-size:0.9rem;color:var(--muted)">
+      <li>Hussein &amp; Zahid (2024). Improved Naked Mole-Rat Algorithm based on Variable Neighborhood Search for the N-Queens Problem.</li>
+      <li>Leal (2025). Implementation and Optimization of the N-Queens Problem Using Tabu Search Algorithm.</li>
+      <li>Moghimi &amp; Amini (2024). A novel approach for solving the N-Queens problem using a non-sequential conflict resolution algorithm. <i>Electronics</i>, 13(20), 4065.</li>
+      <li>Pantekis et al. (2024). Optimized massively parallel solving of N-Queens on GPGPU. <i>Concurrency and Computation</i>, 37(18), e8004.</li>
+      <li>Santhosh et al. (2023). A quantum approach to solve N-Queens problem. arXiv:2312.16312.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================ CHAPTER 8 ============================ -->
+<div class="chapter c8" id="ch8">
+  <div class="chapter-head c8">
+    <div class="label">บทที่ 8</div>
+    <h2>การเรียกซ้ำ (Recursion)</h2>
+    <p>ฟังก์ชันเรียกตัวเองเพื่อแก้ปัญหาย่อยที่มีโครงสร้างเหมือนปัญหาเดิม แล้วนำผลมารวมเป็นคำตอบสุดท้าย เป็นพื้นฐานของ Divide and Conquer, Dynamic Programming และ Backtracking</p>
+  </div>
+
+  <section class="sec">
+    <h3><span class="no">8.1</span>หลักการทำงานของ Recursion</h3>
+    <div class="cols">
+      <div class="card"><h4>Base Case</h4><p>เงื่อนไขหยุดการเรียกซ้ำ เมื่อปัญหาเล็กพอจะแก้ได้ทันที ถ้าไม่มีจะเกิด infinite recursion และ Stack Overflow</p></div>
+      <div class="card"><h4>Recursive Case</h4><p>ส่วนที่ฟังก์ชันเรียกตัวเองด้วยปัญหาย่อยที่เล็กลง จนถึง Base Case</p></div>
+    </div>
+    <div class="codeblock"><div class="cap">โปรแกรม 8.1 · Factorial</div>
+<pre><code>def factorial(n):
+    if n == 0:                     # Base Case: หยุดเมื่อ n = 0
+        return 1
+    else:
+        return n * factorial(n-1)  # Recursive Case: ลด n ลง 1</code></pre></div>
+    <p>ทุกครั้งที่เรียกฟังก์ชันจะเกิด Stack Frame ใหม่เก็บตัวแปรและตำแหน่งที่ต้องกลับไปทำต่อ การทำงานแบ่งเป็นช่วงลงลึก (calling phase) จนถึง Base Case แล้วช่วงย้อนกลับขึ้น (returning phase) ส่งค่าคืนทีละชั้น</p>
+    <div class="codeblock"><div class="cap">factorial(3)</div>
+<pre class="out"><code>factorial(3)
+→ 3 * factorial(2)
+→ 3 * (2 * factorial(1))
+→ 3 * (2 * (1 * factorial(0)))
+→ 3 * (2 * (1 * 1))
+→ 3 * 2 * 1 = 6</code></pre></div>
+    <div class="codeblock"><div class="cap">โครงสร้างทั่วไป</div>
+<pre><code>Algorithm RecursiveFunction(parameters):
+    if (Base Case condition is True) then
+        return direct result                 # เงื่อนไขหยุด
+    else
+        process current step                 # ประมวลผลบางส่วน
+        call RecursiveFunction(modified parameters)   # เรียกตัวเองด้วยปัญหาย่อย
+        combine results if necessary         # รวมผลลัพธ์ (ถ้ามี)</code></pre></div>
+    <div class="tbl"><table>
+      <thead><tr><th>องค์ประกอบ</th><th>คำอธิบาย</th></tr></thead>
+      <tbody>
+        <tr><td>แนวคิดหลัก</td><td>ฟังก์ชันเรียกตัวเองเพื่อแก้ปัญหาย่อยที่มีโครงสร้างเหมือนกัน</td></tr>
+        <tr><td>ส่วนสำคัญ</td><td>Base Case (หยุด) และ Recursive Case (เรียกซ้ำ)</td></tr>
+        <tr><td>Combination Step</td><td>ส่วนรวมผลลัพธ์จากการเรียกซ้ำ ใช้ในบางอัลกอริทึม เช่น Merge Sort</td></tr>
+        <tr><td>กลไกภายใน</td><td>ใช้ Stack Frame เก็บสถานะของแต่ละระดับ</td></tr>
+        <tr><td>ทิศทาง</td><td>ลงลึก (เรียกซ้ำ) → กลับขึ้น (คืนค่า)</td></tr>
+        <tr><td>ข้อควรระวัง</td><td>ต้องมี Base Case ที่ชัดเจน</td></tr>
+        <tr><td>ตัวอย่างที่พบบ่อย</td><td>Factorial, Fibonacci, Binary Search, Tower of Hanoi</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="sec">
+    <h3><span class="no">8.2</span>ประเภทของ Recursion</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>ประเภท</th><th>ลักษณะ</th><th>ตัวอย่าง</th><th>ความซับซ้อนโดยทั่วไป</th></tr></thead>
+      <tbody>
+        <tr><td>Direct</td><td>เรียกตัวเองโดยตรง</td><td>Factorial, Fibonacci</td><td>ปานกลาง</td></tr>
+        <tr><td>Indirect</td><td>A เรียก B แล้ว B กลับมาเรียก A</td><td>Function A/B</td><td>ปานกลางถึงสูง</td></tr>
+        <tr><td>Tail</td><td>การเรียกซ้ำเป็นคำสั่งสุดท้าย (Tail Call Optimization ใช้เฟรมเดียวได้)</td><td>Tail Sum</td><td>ต่ำ ประหยัดหน่วยความจำ</td></tr>
+        <tr><td>Non-Tail</td><td>มีการคำนวณหลังเรียกซ้ำ ต้องเก็บสถานะทุกชั้น</td><td>Factorial, Merge Sort</td><td>ปานกลางถึงสูง</td></tr>
+        <tr><td>Multiple</td><td>เรียกตัวเองมากกว่า 1 ครั้ง สร้าง recursion tree ที่ขยายทวีคูณ</td><td>Fibonacci</td><td>สูงมาก (exponential)</td></tr>
+        <tr><td>Divide &amp; Combine</td><td>แบ่งปัญหา แก้ แล้วรวมผล</td><td>Merge Sort, Quick Sort</td><td>O(n log n)</td></tr>
+      </tbody>
+    </table></div>
+    <div class="cols">
+      <div class="codeblock" style="margin:0;min-width:0"><div class="cap">Indirect</div>
+<pre><code>def functionA(n):
+    if n &gt; 0:
+        print(n)
+        functionB(n - 1)
+
+def functionB(n):
+    if n &gt; 1:
+        print(n)
+        functionA(n // 2)</code></pre></div>
+      <div class="codeblock" style="margin:0;min-width:0"><div class="cap">Tail</div>
+<pre><code>def tail_sum(n, total=0):
+    if n == 0:                  # Base Case
+        return total
+    return tail_sum(n - 1, total + n)   # Tail call</code></pre></div>
+      <div class="codeblock" style="margin:0;min-width:0"><div class="cap">Divide &amp; Combine</div>
+<pre><code>def merge_sort(arr):
+    if len(arr) &lt;= 1:
+        return arr
+    mid = len(arr)//2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    return merge(left, right)</code></pre></div>
+    </div>
+    <p style="font-size:0.9rem;color:var(--muted)">Direct, Non-Tail และ Multiple ใช้โค้ด factorial และ fibonacci ในหัวข้อก่อนหน้าและถัดไป ฟังก์ชัน <code>merge</code> ในตัวอย่าง Merge Sort ตำราไม่ได้แสดงโค้ด</p>
+  </section>
+
+  <section class="sec" id="fib">
+    <h3><span class="no">8.2.1</span>ตัวอย่าง: ลำดับ Fibonacci</h3>
+    <div class="callout t"><p>f(n) = 0 เมื่อ n = 0 · f(n) = 1 เมื่อ n = 1 · f(n) = f(n−1) + f(n−2) เมื่อ n &gt; 1</p></div>
+    <div class="codeblock"><div class="cap">โปรแกรมคำนวณ Fibonacci ด้วยการเรียกซ้ำ</div>
+<pre><code>def fibonacci(n):
+    if n &lt;= 1:                                  # Base Case
+        return n
+    else:                                        # Recursive Case
+        return fibonacci(n-1) + fibonacci(n-2)</code></pre></div>
+    <div class="codeblock"><div class="cap">Recursion tree ของ fibonacci(5)</div>
+<pre><code>                 fibonacci(5)
+                /            \
+        fibonacci(4)        fibonacci(3)
+        /         \          /        \
+ fibonacci(3) fibonacci(2) fibonacci(2) fibonacci(1)
+   /     \       /    \       /    \
+fib(2) fib(1) fib(1) fib(0) fib(1) fib(0)</code></pre></div>
+    <p>แต่ละการเรียกแตกเป็นสองการเรียกย่อย และ fibonacci(2), fibonacci(3) ถูกคำนวณซ้ำหลายครั้งในหลายกิ่ง</p>
+    <div class="cols">
+      <div class="card"><h4>เวลา: O(2ⁿ)</h4><p>T(n) = T(n−1) + T(n−2) + O(1) จำนวนโหนดในต้นไม้เติบโตประมาณ 2ⁿ เป็น exponential เพราะมีการคำนวณซ้ำ (overlapping subproblems)</p></div>
+      <div class="card"><h4>พื้นที่: O(n)</h4><p>ขึ้นกับความลึกของการเรียกซ้ำ ซึ่งลึกสุด n เพราะต้องรอผลของ fibonacci(n−1) ก่อน</p></div>
+    </div>
+    <p>แนวทางปรับปรุงคือใช้ Dynamic Programming เช่น Memoization หรือแปลงเป็นแบบ Bottom-Up ตามที่กล่าวในบทที่ 6</p>
+  </section>
+
+  <section class="sec" id="hanoi">
+    <h3><span class="no">8.3</span>Tower of Hanoi</h3>
+    <p>มีเสา 3 ต้น (A, B, C) และดิสก์ n แผ่นซ้อนบนเสา A โดยแผ่นใหญ่สุดอยู่ล่าง ต้องย้ายทั้งหมดไปเสา C ตามกฎ: ย้ายได้ครั้งละ 1 แผ่น ห้ามวางแผ่นใหญ่ทับแผ่นเล็ก และใช้เสา B เป็นเสาช่วยได้</p>
+    <ol class="steps">
+      <li>ย้ายแผ่น n−1 แผ่นจาก A ไป B (ใช้ C เป็นเสาช่วย)</li>
+      <li>ย้ายแผ่นใหญ่สุด (แผ่นที่ n) จาก A ไป C</li>
+      <li>ย้ายแผ่น n−1 แผ่นจาก B ไป C (ใช้ A เป็นเสาช่วย)</li>
+    </ol>
+    <div class="callout t"><p>T(1) = 1 และ T(n) = 2T(n−1) + 1 เมื่อ n &gt; 1 ขยายสมการได้ <b>T(n) = 2ⁿ − 1</b> จำนวนครั้งที่ต้องย้ายทั้งหมด</p></div>
+
+    <div class="demo">
+      <h4>ลองเปลี่ยนจำนวนแผ่น</h4>
+      <div class="row">
+        <label for="hn">จำนวนแผ่น n = <b id="hnv">3</b></label>
+        <input type="range" id="hn" min="1" max="20" value="3" aria-label="จำนวนแผ่นดิสก์">
+      </div>
+      <div class="readout"><span>จำนวนครั้งที่ย้าย 2ⁿ − 1 = <b id="hcount">7</b></span></div>
+      <ul class="moves" id="hmoves" style="margin-top:10px"></ul>
+    </div>
+
+    <div class="codeblock"><div class="cap">โค้ด Tower of Hanoi</div>
+<pre><code>def hanoi(n, source, target, auxiliary):
+    if n == 1:                  # Base Case: แผ่นเดียว ย้ายได้ทันที
+        print(f"Move disk 1 from {source} to {target}")
+    else:
+        # Step 1: ย้าย n-1 แผ่น จากต้นทางไปเสาช่วย
+        hanoi(n-1, source, auxiliary, target)
+        # Step 2: ย้ายแผ่นใหญ่สุดจากต้นทางไปเสาปลายทาง
+        print(f"Move disk {n} from {source} to {target}")
+        # Step 3: ย้าย n-1 แผ่น จากเสาช่วยไปเสาปลายทาง
+        hanoi(n-1, auxiliary, target, source)
+
+# ตัวอย่างการเรียกใช้
+hanoi(3, 'A', 'C', 'B')</code></pre></div>
+    <div class="codeblock"><div class="cap">Recursion tree เมื่อ n = 3</div>
+<pre><code>Hanoi(3, A, C, B)
+├─ Hanoi(2, A, B, C)
+│   ├─ Hanoi(1, A, C, B)
+│   ├─ Move disk 2 from A to B
+│   └─ Hanoi(1, C, B, A)
+├─ Move disk 3 from A to C
+└─ Hanoi(2, B, C, A)
+    ├─ Hanoi(1, B, A, C)
+    ├─ Move disk 2 from B to C
+    └─ Hanoi(1, A, C, B)</code></pre></div>
+    <div class="tbl"><table>
+      <thead><tr><th>ประเด็น</th><th>คำอธิบาย</th></tr></thead>
+      <tbody>
+        <tr><td>Base Case</td><td>n = 1 ย้ายเพียง 1 ครั้ง</td></tr>
+        <tr><td>Recurrence</td><td>T(n) = 2T(n−1) + 1</td></tr>
+        <tr><td>ผลการขยาย</td><td>T(n) = 2ⁿ − 1</td></tr>
+        <tr><td>Time Complexity</td><td>O(2ⁿ)</td></tr>
+        <tr><td>Space Complexity</td><td>O(n) ตามความลึกของการเรียกซ้ำ</td></tr>
+        <tr><td>ประเภท</td><td>Multiple Recursion (แบ่งเป็นสองปัญหาย่อย)</td></tr>
+        <tr><td>แนวคิดที่สอน</td><td>ใช้ Recursion กับปัญหาที่มีโครงสร้างซ้ำ และการหา recurrence relation ปูพื้นสู่ Divide and Conquer</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="sec">
+    <h3><span class="no">8.4</span>งานวิจัยที่ประยุกต์ใช้ Recursion</h3>
+    <div class="tbl"><table>
+      <thead><tr><th class="n">ปี</th><th>งานวิจัย</th><th>สาขา</th><th>แนวคิด</th><th>ผลลัพธ์</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1965</td><td>Cooley &amp; Tukey — FFT</td><td>Signal Processing</td><td>แบ่ง DFT ขนาด N เป็น DFT ขนาด N/2 ซ้ำ ๆ</td><td>ลดเวลาจาก O(N²) เหลือ O(N log N)</td></tr>
+        <tr><td class="n">1994</td><td>Bentley, Haken &amp; Saxe — Solving Recurrence Relations</td><td>Algorithm Analysis</td><td>กำหนดและวิเคราะห์ recurrence relation</td><td>เทคนิคเชิงระบบ แก้ recurrence ซับซ้อนได้ง่ายขึ้น</td></tr>
+        <tr><td class="n">2011</td><td>Socher et al. — Recursive Neural Networks</td><td>AI / NLP</td><td>ใช้ recursion บน parse tree เพื่อสร้าง sentence representation</td><td>เข้าใจโครงสร้างไวยากรณ์ได้ลึกกว่า CNN และ RNN ทั่วไป</td></tr>
+        <tr><td class="n">2013</td><td>Brummitt et al. — Cascading Failure in Networks</td><td>Network Science</td><td>สมการ recursive จำลองความล้มเหลวแบบลูกโซ่</td><td>ทำนายจุดเปราะบางของระบบโครงข่าย</td></tr>
+        <tr><td class="n">2022</td><td>Mukherjee et al. — Recursive Fractal Image Compression</td><td>Image Processing</td><td>แบ่งภาพแบบ recursive เพื่อบีบอัดโครงสร้างซ้ำ</td><td>ลดขนาดไฟล์กว่า 30% คุณภาพสูง (PSNR &gt; 35 dB)</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="sec">
+    <h3>Recursion เทียบกับ Iteration และสิ่งที่ควรจำ</h3>
+    <ul>
+      <li>Recursion ต้องมี Base Case ที่ชัดเจนเสมอ</li>
+      <li>ทุกการเรียกสร้าง Stack Frame ใหม่ และปิดเมื่อฟังก์ชันคืนค่า</li>
+      <li>ไม่มี Base Case ที่ถูกต้อง → infinite recursion และ Stack Overflow</li>
+      <li>Multiple Recursion ที่มีการคำนวณซ้ำ (เช่น Fibonacci) ช้าแบบ exponential แก้ได้ด้วย Memoization หรือ Bottom-Up</li>
+      <li>Tail Recursion ประหยัดหน่วยความจำและแปลงเป็นลูปได้ง่าย</li>
+    </ul>
+  </section>
+</div>
+
+<footer>สรุปจากหนังสือ Analysis of Algorithm บทที่ 7 (หน้า 105–132) และบทที่ 8 (หน้า 133–149) โค้ด N-Queens, เขาวงกต และ Hanoi รันตรวจแล้ว</footer>
+</div>
+
+<script>
+// ----- copy buttons on code blocks -----
+document.querySelectorAll('.codeblock').forEach(function (box) {
+  var pre = box.querySelector('pre');
+  if (!pre || pre.classList.contains('out')) return;
+  var b = document.createElement('button');
+  b.type = 'button'; b.className = 'copy'; b.textContent = 'คัดลอก';
+  b.addEventListener('click', function () {
+    var text = pre.innerText;
+    function done() { b.textContent = 'คัดลอกแล้ว'; setTimeout(function () { b.textContent = 'คัดลอก'; }, 1500); }
+    function fallback() {
+      var r = document.createRange(); r.selectNodeContents(pre);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      b.textContent = 'เลือกข้อความแล้ว';
+    }
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  });
+  box.appendChild(b);
+});
+
+// ----- N-Queens demo -----
+(function () {
+  var sel = document.getElementById('qn'), btn = document.getElementById('qrun');
+  var board = document.getElementById('qboard'), read = document.getElementById('qread');
+  function solve(n) {
+    var cols = [], first = null, count = 0, calls = 0;
+    function safe(r, c) {
+      for (var i = 0; i < r; i++) { if (cols[i] === c || Math.abs(cols[i] - c) === r - i) return false; }
+      return true;
+    }
+    function place(r) {
+      if (r === n) { count++; if (!first) first = cols.slice(); return; }
+      for (var c = 0; c < n; c++) { calls++; if (safe(r, c)) { cols[r] = c; place(r + 1); } }
+    }
+    place(0);
+    return { first: first, count: count, calls: calls };
+  }
+  function run() {
+    var n = parseInt(sel.value, 10), res = solve(n);
+    board.style.gridTemplateColumns = 'repeat(' + n + ', minmax(0, ' + Math.max(26, Math.floor(360 / n)) + 'px))';
+    board.innerHTML = '';
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) {
+      var i = document.createElement('i');
+      var isQ = res.first && res.first[r] === c;
+      i.className = isQ ? 'q' : ((r + c) % 2 ? 'd' : 'l');
+      if (isQ) i.textContent = '♛';
+      board.appendChild(i);
+    }
+    var total = Math.pow(n, n);
+    read.innerHTML =
+      '<span>คำตอบแรก (คอลัมน์ต่อแถว): <b>' + res.first.map(function (x) { return x + 1; }).join(' ') + '</b></span>' +
+      '<span>จำนวนคำตอบทั้งหมด: <b>' + res.count + '</b></span>' +
+      '<span>จำนวนครั้งที่เรียก isSafe (หาทุกคำตอบ): <b>' + res.calls.toLocaleString('en-US') + '</b></span>' +
+      '<span>เทียบกับลองวางทุกแบบ nⁿ: <b>' + total.toLocaleString('en-US') + '</b></span>';
+  }
+  btn.addEventListener('click', run); sel.addEventListener('change', run); run();
+})();
+
+// ----- Hanoi demo -----
+(function () {
+  var s = document.getElementById('hn'), v = document.getElementById('hnv');
+  var cnt = document.getElementById('hcount'), list = document.getElementById('hmoves');
+  function hanoi(n, a, c, b, out) {
+    if (n === 1) { out.push('ย้ายแผ่น 1 จาก ' + a + ' ไป ' + c); return; }
+    hanoi(n - 1, a, b, c, out); out.push('ย้ายแผ่น ' + n + ' จาก ' + a + ' ไป ' + c); hanoi(n - 1, b, c, a, out);
+  }
+  function upd() {
+    var n = parseInt(s.value, 10);
+    v.textContent = n;
+    cnt.textContent = (Math.pow(2, n) - 1).toLocaleString('en-US');
+    list.innerHTML = '';
+    if (n <= 4) {
+      var out = []; hanoi(n, 'A', 'C', 'B', out);
+      out.forEach(function (m, i) { var li = document.createElement('li'); li.textContent = (i + 1) + '. ' + m; list.appendChild(li); });
+    } else {
+      var li = document.createElement('li'); li.style.columns = 'auto';
+      li.textContent = 'แสดงลำดับการย้ายเมื่อ n ไม่เกิน 4';
+      list.appendChild(li);
+    }
+  }
+  s.addEventListener('input', upd); upd();
+})();
+</script>
+
+</body></html>
